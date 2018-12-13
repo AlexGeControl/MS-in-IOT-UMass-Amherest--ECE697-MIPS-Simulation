@@ -338,7 +338,350 @@ void Executor::execute_WB() {
 
 ---
 
+### Testcase
+
+#### Data Hazard Detection
+
+In this demo the following ASM snippet is used to demonstrate how to handle data hazard.
+
+```asm
+LUI $t8 0x3
+
+LUI $t9 0x5
+
+MUL $t0 $t8 $t9
+```
+Run the following command in terminal to run this testcase:
+
+```shell
+./main --input ../input/test-mul.asm --mode instruction --number 10
+```
+
+##### Instruction Memory Image
+```shell
+0x00400000: 0x3c180003;	lui $t8 0x3
+0x00400004: 0x3c190005;	lui $t9 0x5
+0x00400008: 0x03194026;	mul $t0 $t8 $t9
+```
+
+##### System State Plot
+
+```shell
+[Clock Cycle]: 0
+        IF: lui $t8 0x3
+        ID: nop
+        EX: nop
+        MEM: nop
+        WB: nop
+
+[Clock Cycle]: 1
+        IF: lui $t9 0x5
+        ID: lui $t8 0x3
+        EX: nop
+        MEM: nop
+        WB: nop
+
+[Clock Cycle]: 2
+        IF: mul $t0 $t8 $t9
+        ID: lui $t9 0x5
+        EX: lui $t8 0x3
+        MEM: nop
+        WB: nop
+
+[Clock Cycle]: 3
+        IF: nop
+        ID: mul $t0 $t8 $t9
+        EX: lui $t9 0x5
+        MEM: lui $t8 0x3
+        WB: nop
+
+[Clock Cycle]: 4
+        IF: nop
+        ID: mul $t0 $t8 $t9
+        EX: nop
+        MEM: lui $t9 0x5
+        WB: lui $t8 0x3
+
+[Clock Cycle]: 5
+        IF: nop
+        ID: mul $t0 $t8 $t9
+        EX: nop
+        MEM: nop
+        WB: lui $t9 0x5
+
+[Clock Cycle]: 6
+        IF: nop
+        ID: nop
+        EX: mul $t0 $t8 $t9
+        MEM: nop
+        WB: nop
+
+[Clock Cycle]: 7
+        IF: nop
+        ID: nop
+        EX: nop
+        MEM: mul $t0 $t8 $t9
+        WB: nop
+
+[Clock Cycle]: 8
+        IF: nop
+        ID: nop
+        EX: nop
+        MEM: nop
+        WB: mul $t0 $t8 $t9
+```
+
+##### Register Contents Report
+
+```json
+{
+    "register contents": {
+        "a0": "0x00000000",
+        "a1": "0x00000000",
+        "a2": "0x00000000",
+        "a3": "0x00000000",
+        "at": "0x00000000",
+        "fp": "0x00000000",
+        "gp": "0x00000000",
+        "k0": "0x00000000",
+        "k1": "0x00000000",
+        "ra": "0x00000000",
+        "s0": "0x00000000",
+        "s1": "0x00000000",
+        "s2": "0x00000000",
+        "s3": "0x00000000",
+        "s4": "0x00000000",
+        "s5": "0x00000000",
+        "s6": "0x00000000",
+        "s7": "0x00000000",
+        "sp": "0x00000000",
+        "t0": "0x00000000",
+        "t1": "0x0000000f",
+        "t2": "0x00000000",
+        "t3": "0x00000000",
+        "t4": "0x00000000",
+        "t5": "0x00000000",
+        "t6": "0x00000000",
+        "t7": "0x00000000",
+        "t8": "0x00030000",
+        "t9": "0x00050000",
+        "v0": "0x00000000",
+        "v1": "0x00000000",
+        "zero": "0x00000000"
+    },
+}
+
+```
+
+##### Resource Utilization Report
+
+```json
+{
+    "resource utilization": {
+        "nop analysis": {
+            "EX": {
+                "count": 6,
+                "percentage": 66.66666666666667
+            },
+            "ID": {
+                "count": 6,
+                "percentage": 66.66666666666667
+            },
+            "IF": {
+                "count": 6,
+                "percentage": 66.66666666666667
+            },
+            "MEM": {
+                "count": 9,
+                "percentage": 100.0
+            },
+            "WB": {
+                "count": 6,
+                "percentage": 66.66666666666667
+            }
+        },
+        "total clock cycles": 9,
+        "total instructions": 3
+    }
+}
+```
+
+#### Control Hazard Detection
+
+In this demo the following ASM snippet is used to demonstrate how to handle data hazard.
+
+```asm
+LUI $t8 0x3
+
+LUI $t9 0x5
+
+BEQ $Zero $Zero 0x0001
+
+MUL $t0 $t8 $t9
+
+MUL $t2 $t8 $t9
+```
+Run the following command in terminal to run this testcase:
+
+```shell
+./main --input ../input/test-beq.asm --mode instruction --number 10
+```
+
+##### Instruction Memory Image
+```shell
+0x00400000: 0x3c180003;	lui $t8 0x3
+0x00400004: 0x3c190005;	lui $t9 0x5
+0x00400008: 0x10000001;	beq $zero $zero 0x0001
+0x0040000c: 0x03194026;	mul $t0 $t8 $t9
+0x00400010: 0x03195026;	mul $t2 $t8 $t9
+```
+
+##### System State Plot
+
+```shell
+[Clock Cycle]: 0
+        IF: lui $t8 0x3
+        ID: nop
+        EX: nop
+        MEM: nop
+        WB: nop
+
+[Clock Cycle]: 1
+        IF: lui $t9 0x5
+        ID: lui $t8 0x3
+        EX: nop
+        MEM: nop
+        WB: nop
+
+[Clock Cycle]: 2
+        IF: beq $zero $zero 0x0001
+        ID: lui $t9 0x5
+        EX: lui $t8 0x3
+        MEM: nop
+        WB: nop
+
+[Clock Cycle]: 3
+        IF: mul $t0 $t8 $t9
+        ID: beq $zero $zero 0x0001
+        EX: lui $t9 0x5
+        MEM: lui $t8 0x3
+        WB: nop
+
+[Clock Cycle]: 4
+        IF: mul $t0 $t8 $t9
+        ID: nop
+        EX: beq $zero $zero 0x0001
+        MEM: lui $t9 0x5
+        WB: lui $t8 0x3
+
+[Clock Cycle]: 5
+        IF: nop
+        ID: mul $t2 $t8 $t9
+        EX: nop
+        MEM: beq $zero $zero 0x0001
+        WB: lui $t9 0x5
+
+[Clock Cycle]: 6
+        IF: nop
+        ID: nop
+        EX: mul $t2 $t8 $t9
+        MEM: nop
+        WB: beq $zero $zero 0x0001
+
+[Clock Cycle]: 7
+        IF: nop
+        ID: nop
+        EX: nop
+        MEM: mul $t2 $t8 $t9
+        WB: nop
+
+[Clock Cycle]: 8
+        IF: nop
+        ID: nop
+        EX: nop
+        MEM: nop
+        WB: mul $t2 $t8 $t9
+```
+
+##### Register Contents Report
+
+```json
+{
+    "register contents": {
+        "a0": "0x00000000",
+        "a1": "0x00000000",
+        "a2": "0x00000000",
+        "a3": "0x00000000",
+        "at": "0x00000000",
+        "fp": "0x00000000",
+        "gp": "0x00000000",
+        "k0": "0x00000000",
+        "k1": "0x00000000",
+        "ra": "0x00000000",
+        "s0": "0x00000000",
+        "s1": "0x00000000",
+        "s2": "0x00000000",
+        "s3": "0x00000000",
+        "s4": "0x00000000",
+        "s5": "0x00000000",
+        "s6": "0x00000000",
+        "s7": "0x00000000",
+        "sp": "0x00000000",
+        "t0": "0x00000000",
+        "t1": "0x00000000",
+        "t2": "0x00000000",
+        "t3": "0x0000000f",
+        "t4": "0x00000000",
+        "t5": "0x00000000",
+        "t6": "0x00000000",
+        "t7": "0x00000000",
+        "t8": "0x00030000",
+        "t9": "0x00050000",
+        "v0": "0x00000000",
+        "v1": "0x00000000",
+        "zero": "0x00000000"
+    }
+}
+```
+
+##### Resource Utilization Report
+
+```json
+{
+    "resource utilization": {
+        "nop analysis": {
+            "EX": {
+                "count": 5,
+                "percentage": 55.55555555555556
+            },
+            "ID": {
+                "count": 5,
+                "percentage": 55.55555555555556
+            },
+            "IF": {
+                "count": 5,
+                "percentage": 55.55555555555556
+            },
+            "MEM": {
+                "count": 9,
+                "percentage": 100.0
+            },
+            "WB": {
+                "count": 6,
+                "percentage": 66.66666666666667
+            }
+        },
+        "total clock cycles": 9,
+        "total instructions": 4
+    }
+}
+
+```
+
+---
+
+
 ### Conclusion
 
-In this project a simulator for pipelined MIPS processor is implemented. Besides the required executor, an assembler is also added for easy debugging. Inside the pipelined processor both data and control hazard detections are implemented.
+In this project a simulator for pipelined MIPS processor is implemented. Besides the required executor, an assembler is also added for easy debugging. Inside the pipelined processor both data and control hazard detections are implemented. Here inserting nop is used to implement pipeline stall. The two representative testcases show that the simulator can correctly implement all the required functions.
 

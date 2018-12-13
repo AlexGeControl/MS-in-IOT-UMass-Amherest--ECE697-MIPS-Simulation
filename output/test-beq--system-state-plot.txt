@@ -1,0 +1,65 @@
+[MIPS simulator]: input ASM -- ../input/test-beq.asm, mode -- instruction, number -- 10
+[MIPS simulator]: Assembler -- text segment [0x00400000, 0x00400010]
+[Clock Cycle]: 0
+	IF: lui $t8 0x3
+	ID: nop
+	EX: nop
+	MEM: nop
+	WB: nop
+
+[Clock Cycle]: 1
+	IF: lui $t9 0x5
+	ID: lui $t8 0x3
+	EX: nop
+	MEM: nop
+	WB: nop
+
+[Clock Cycle]: 2
+	IF: beq $zero $zero 0x0001
+	ID: lui $t9 0x5
+	EX: lui $t8 0x3
+	MEM: nop
+	WB: nop
+
+[Clock Cycle]: 3
+	IF: mul $t0 $t8 $t9
+	ID: beq $zero $zero 0x0001
+	EX: lui $t9 0x5
+	MEM: lui $t8 0x3
+	WB: nop
+
+[Clock Cycle]: 4
+	IF: mul $t0 $t8 $t9
+	ID: nop
+	EX: beq $zero $zero 0x0001
+	MEM: lui $t9 0x5
+	WB: lui $t8 0x3
+
+[Clock Cycle]: 5
+	IF: nop
+	ID: mul $t2 $t8 $t9
+	EX: nop
+	MEM: beq $zero $zero 0x0001
+	WB: lui $t9 0x5
+
+[Clock Cycle]: 6
+	IF: nop
+	ID: nop
+	EX: mul $t2 $t8 $t9
+	MEM: nop
+	WB: beq $zero $zero 0x0001
+
+[Clock Cycle]: 7
+	IF: nop
+	ID: nop
+	EX: nop
+	MEM: mul $t2 $t8 $t9
+	WB: nop
+
+[Clock Cycle]: 8
+	IF: nop
+	ID: nop
+	EX: nop
+	MEM: nop
+	WB: mul $t2 $t8 $t9
+

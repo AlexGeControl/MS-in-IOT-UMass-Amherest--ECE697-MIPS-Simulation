@@ -6,7 +6,7 @@
 
 ```python
 def lock(lock) {
-  while (!atomic_load(lock.value)) {
+  while (atomic_load(lock.value) != 0) {
     atomic_store(lock.value, thread_id);
     if (atomic_load(lock.value) == thread_id) {
       break;
